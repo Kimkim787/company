@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+html, body {
+  height: 100%;
+}
+
+body {
+  color: #111111;
+  background: #ffffff;
+}
+
+/* footer background */
+.bg-footer {
+  background: #1f1f1f;
+}
