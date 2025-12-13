@@ -1,12 +1,13 @@
 import Container from "@/components/Container";
 
 const stats = [
-  { label: "PROJECTS COMPLETED", value: "150+" },
-  { label: "SATISFIED CLIENTS", value: "50+" },
-  { label: "YEARS OF EXPERIENCE", value: "10+" }
+  { label: "PROJECTS COMPLETED", value: "15+" },
+  { label: "SATISFIED CLIENTS", value: "10+" },
+  { label: "YEARS OF EXPERIENCE", value: "2+" }
 ];
 
 const skills = [
+  "AI Integration",
   "JavaScript",
   "React",
   "Python",
