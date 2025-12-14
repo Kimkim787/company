@@ -1,20 +1,46 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
 import Container from "@/components/Container";
+
+type FormState = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
 
 function Input({
   label,
   type = "text",
-  placeholder = ""
+  placeholder = "",
+  value,
+  onChange,
+  name,
+  required = false
 }: {
   label: string;
   type?: string;
   placeholder?: string;
+  value: string;
+  name: string;
+  required?: boolean;
+  onChange: (value: string) => void;
 }) {
   return (
     <label className="block">
-      <div className="mb-2 font-sans text-[18px]">{label} *</div>
+      <div className="mb-2 font-sans text-[18px]">
+        {label}
+        {required ? " *" : ""}
+      </div>
       <input
         type={type}
+        name={name}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        required={required}
         className="w-full rounded-md border border-line bg-white px-4 py-3 text-[16px] outline-none focus:border-ink"
       />
     </label>
@@ -22,6 +48,56 @@ function Input({
 }
 
 export default function ContactPage() {
+  const [form, setForm] = useState<FormState>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  const updateField = (key: keyof FormState) => (value: string) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus("loading");
+    setError(null);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+
+      const body = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || body.ok !== true) {
+        throw new Error(body.error || "Unable to send your message.");
+      }
+
+      setForm({ first_name: "", last_name: "", email: "", subject: "", message: "" });
+      setStatus("success");
+    } catch (err) {
+      setStatus("error");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
+      );
+    }
+  };
+
+  const isSubmitting = status === "loading";
+
   return (
     <Container className="py-14">
       <div className="text-muted uppercase tracking-widest text-sm">
@@ -77,30 +153,83 @@ export default function ContactPage() {
         </div>
 
         {/* Right column form */}
-        <div className="bg-panel p-8 md:p-10">
+        <form
+          className="bg-panel p-8 md:p-10"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <Input label="Name" />
-            <Input label="Email" type="email" />
+            <Input
+              label="First Name"
+              name="first_name"
+              value={form.first_name}
+              onChange={updateField("first_name")}
+              required
+            />
+            <Input
+              label="Last Name"
+              name="last_name"
+              value={form.last_name}
+              onChange={updateField("last_name")}
+              required
+            />
           </div>
 
           <div className="mt-8">
-            <Input label="Subject" />
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={updateField("email")}
+              required
+            />
+          </div>
+
+          <div className="mt-8">
+            <Input
+              label="Subject"
+              name="subject"
+              value={form.subject}
+              onChange={updateField("subject")}
+              placeholder="How can we help?"
+            />
           </div>
 
           <div className="mt-8">
             <label className="block">
               <div className="mb-2 font-sans text-[18px]">Message *</div>
               <textarea
+                name="message"
+                required
+                value={form.message}
+                onChange={(event) => updateField("message")(event.target.value)}
                 className="h-[220px] w-full resize-none rounded-md border border-line bg-white px-4 py-3 text-[16px] outline-none focus:border-ink"
-                placeholder=""
+                placeholder="Tell us about your project, timeline, and goals."
               />
             </label>
           </div>
 
-          <button className="mt-10 w-full bg-[#1F1F1F] py-4 text-center text-[22px] font-semibold text-white">
-            Send Message
+          {status === "success" && (
+            <div className="mt-6 rounded-md bg-green-50 px-4 py-3 text-green-700">
+              Message sent! We&apos;ll get back to you shortly.
+            </div>
+          )}
+
+          {status === "error" && (
+            <div className="mt-6 rounded-md bg-red-50 px-4 py-3 text-red-700">
+              {error || "Unable to send your message. Please try again."}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-10 w-full bg-[#1F1F1F] py-4 text-center text-[22px] font-semibold text-white disabled:opacity-60"
+          >
+            {isSubmitting ? "Sending..." : "Send Message"}
           </button>
-        </div>
+        </form>
       </div>
     </Container>
   );
