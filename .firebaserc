@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "emist-devcommission"
-  }
+    "default": "emist-devcommission",
+    "notify_team_comm": "emist-devcommission"
+  },
+  "targets": {},
+  "etags": {}
 }
